@@ -64,7 +64,8 @@ void Widget::on_NumListEdit_textChanged(const QString &arg1)
                 sum += num[cnt];
                 list.append(num[cnt]);
             }
-            if(m_sum == sum){
+            float diff = m_sum - sum;
+            if((diff + (float)0.001 >0) && (diff - (float)0.001 < 0)){
                 m_list.append(list);
                 emit equalSum();
             }
@@ -85,12 +86,11 @@ void Widget::updateList()
     foreach (QList<float> numList, m_list) {
         QString n;
         foreach (float num, numList) {
-            QString str = QString("%1").arg(num);
+            QString str = QString("%1 ").arg(num);
             n.append(str);
-            n.append(',');
         }
-        n.append("\r\n");
         text.append(n);
+        text.append("; ");
     }
     ui->numOfLineEdit->setText(text);
 }
