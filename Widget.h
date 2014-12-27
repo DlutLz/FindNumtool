@@ -16,7 +16,7 @@ public:
     ~Widget();
 
 signals:
-    void equalSum(QList<float> list);
+    void equalSum();
     void newDataFound();
 
 private slots:
@@ -26,9 +26,14 @@ private slots:
 
     void on_NumListEdit_textChanged(const QString &arg1);
 
-    void equalSumFound(QList<float> list);
+    void equalSumFound();
 
     void updateList();
+
+private:
+    void findEqualNum(QList<QString> strList);
+    void updateEqualNumList(float equalNum, int cnt);
+
 private:
     Ui::Widget *ui;
     float                   m_sum;

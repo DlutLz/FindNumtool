@@ -10,8 +10,7 @@ Widget::Widget(QWidget *parent)
     , m_list()
 {
     ui->setupUi(this);
-    connect(this, SIGNAL(equalSum(QList<float>)),
-            this, SLOT(equalSumFound(QList<float>)));
+    connect(this, SIGNAL(equalSum()),this, SLOT(equalSumFound()));
     connect(this, SIGNAL(newDataFound()), this, SLOT(updateList()));
 }
 
@@ -23,68 +22,120 @@ Widget::~Widget()
 void Widget::on_NumEdit_textChanged(const QString &arg1)
 {
     m_cnt = arg1.toUInt();
+    m_list.clear();
+    QString str = ui->NumListEdit->text();
+    on_NumListEdit_textChanged(str);
 }
 
 void Widget::on_SumEdit_textChanged(const QString &arg1)
 {
     m_sum = arg1.toFloat();
+    m_list.clear();
+    QString str = ui->NumListEdit->text();
+    on_NumListEdit_textChanged(str);
 }
 
 void Widget::on_NumListEdit_textChanged(const QString &arg1)
 {
+    m_list.clear();
+    ui->numOfLineEdit->setText("");
     QList<QString> numStrList = arg1.split(",");
-    if(numStrList.size() < m_cnt){
+    findEqualNum(numStrList);
+
+    if(numStrList.size() < m_cnt || m_cnt == 0){
         return;
     }
+
     QList<float> numList;
     foreach (QString numStr, numStrList) {
-        numList.append(numStr.toFloat());
+        float a = numStr.toFloat();
+        numList.append(a);
     }
     for(int x = 0; x < numList.size() - m_cnt + 1; ++x){
         float *num = new float[m_cnt];
         for(int y = 0; y < m_cnt - 1; ++y){
             num[y] = numList.at(x + y);
         }
-        for(int z = m_cnt - 1; z < numList.size(); ++z){
-            num[z] = numList.at(z);
+        for(int z = x + m_cnt - 1; z < numList.size(); ++z){
+            num[m_cnt -1] = numList.at(z);
             float sum = 0;
             QList<float> list;
             for(int cnt = 0; cnt < m_cnt; ++cnt){
                 sum += num[cnt];
                 list.append(num[cnt]);
             }
-            qDebug() << list;
             if(m_sum == sum){
-                emit equalSum(list);
+                m_list.append(list);
+                emit equalSum();
             }
         }
         delete [] num;
     }
 }
 
-void Widget::equalSumFound(QList<float> list)
+void Widget::equalSumFound()
 {
-    foreach (QList<float> l, m_list) {
-        if(l ==list){
-            return;
-        }
-    }
-    m_list.append(list);
     emit newDataFound();
 }
 
 void Widget::updateList()
 {
-    ui->numOfLineEdit->clear();
+    ui->numOfLineEdit->setText("");
     QString text;
     foreach (QList<float> numList, m_list) {
         QString n;
         foreach (float num, numList) {
             QString str = QString("%1").arg(num);
             n.append(str);
+            n.append(',');
         }
-        n.append('\n');
+        n.append("\r\n");
         text.append(n);
     }
     ui->numOfLineEdit->setText(text);
+}
+
+void Widget::findEqualNum(QList<QString> strList)
+{
+    ui->equalNumlineEdit->setText("");
+    if(strList.size() < 2){
+        return;
+    }
+    QList<float> numList;
+    foreach (QString numStr, strList) {
+        numList.append(numStr.toFloat());
+    }
+    QList<float> findList;
+
+    for(int x = 0; x < numList.size(); ++x){
+        bool flag = false;
+        foreach(float f, findList){
+            if(f == numList.at(x)){
+                flag = true;
+                continue;
+            }
+
+        }
+
+        if(flag){
+            continue;
+        }
+        int cnt = 1;
+        for(int y = x + 1; y < numList.size(); ++y){
+            if(numList.at(x) == numList.at(y)){
+                cnt++;
+            }
+        }
+        if(cnt > 1){
+            findList.append(numList.at(x));
+            updateEqualNumList(numList.at(x), cnt);
+        }
+    }
+}
+
+void Widget::updateEqualNumList(float equalNum, int cnt)
+{
+    QString str = QString("num:%1 (%2);").arg(equalNum).arg(cnt);
+    QString tmp = ui->equalNumlineEdit->text().append(str);
+    ui->equalNumlineEdit->setText(tmp);
 }
